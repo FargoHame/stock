@@ -21,7 +21,7 @@ This app shows the closing financial stock price values for S and P 500 companie
 - These are 500 of the largest companies listed on stock exchanges in the US.
 - App built by Pranav Sawant and Anshuman Shukla of Team Skillocity.
 - Dataset resource: Yahoo Finance
-- Added feature: Time series forecasting with fbprophet that can predict the stock price values over several years.
+- Added feature: Time series forecasting with fbprophet that can predict the stock price values over 15 years.
 - Note: User inputs for the company to be analysed are taken from the sidebar. It is located at the top left of the page (arrow symbol). Inputs for other features of data analysis can also be provided from the sidebar itself. 
 ''')
 st.write('---')
@@ -115,6 +115,8 @@ def main():
 main()
 
 #part2
+
+st.write('Stock prediction')
 
 START = "2010-01-01"
 TODAY = date.today().strftime("%Y-%m-%d")
