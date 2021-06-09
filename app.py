@@ -62,3 +62,114 @@ st.plotly_chart(fig1)
 st.write("Forecast components")
 fig2 = m.plot_components(forecast)
 st.write(fig2)
+
+#part2
+
+from PIL import Image
+import pandas as pd
+import streamlit as st
+import yfinance
+
+image = Image.open('stock.jpeg')
+
+st.image(image, use_column_width=True)
+
+st.markdown('''
+# Finanace Stock Price App 
+This app shows the closing financial stock price values for S and P 500 companies along with the timeline. 
+- These are 500 of the largest companies listed on stock exchanges in the US.
+- App built by Pranav Sawant and Anshuman Shukla of Team Skillocity.
+- Dataset resource: Yahoo Finance
+- Note: User inputs for the company to be analysed are taken from the sidebar. It is located at the top left of the page (arrow symbol). Inputs for other features of data analysis can also be provided from the sidebar itself. 
+''')
+st.write('---')
+
+
+
+@st.cache
+def load_data():
+    components = pd.read_html(
+        "https://en.wikipedia.org/wiki/List_of_S" "%26P_500_companies"
+    )[0]
+    return components.drop("SEC filings", axis=1).set_index("Symbol")
+
+
+@st.cache(allow_output_mutation=True)
+def load_quotes(asset):
+    return yfinance.download(asset)
+
+
+def main():
+    components = load_data()
+    
+    st.sidebar.title("Options")
+
+    if st.sidebar.checkbox("View companies list"):
+        st.dataframe(
+            components[["Security", "GICS Sector", "Date first added", "Founded"]]
+        )
+        
+    title = st.empty()
+        
+    def label(symbol):
+        a = components.loc[symbol]
+        return symbol + " - " + a.Security
+
+    st.sidebar.subheader("Select company")
+    asset = st.sidebar.selectbox(
+        "Click below to select a new company",
+    components.index.sort_values(),
+    index=3,
+    format_func=label,
+    )
+
+    
+    title.title(components.loc[asset].Security)
+    if st.sidebar.checkbox("View company info", True):
+        st.table(components.loc[asset])
+    data0 = load_quotes(asset)
+    data = data0.copy().dropna()
+    data.index.name = None
+
+    section = st.sidebar.slider(
+        "Number of days for Data Analysis of stocks",
+        min_value=30,
+        max_value=min([5000, data.shape[0]]),
+        value=1000,
+        step=10,
+    )
+
+    data2 = data[-section:]["Adj Close"].to_frame("Adj Close")
+
+    sma = st.sidebar.checkbox("Simple Moving Average")
+    if sma:
+        period = st.sidebar.slider(
+            "Simple Moving Average period", min_value=5, max_value=500, value=20, step=1
+        )
+        data[f"SMA {period}"] = data["Adj Close"].rolling(period).mean()
+        data2[f"SMA {period}"] = data[f"SMA {period}"].reindex(data2.index)
+
+    sma2 = st.sidebar.checkbox("Simple Moving Average 2")
+    if sma2:
+        period2 = st.sidebar.slider(
+            "Simple Moving Average 2 period", min_value=5, max_value=500, value=100, step=1
+        )
+        data[f"SMA2 {period2}"] = data["Adj Close"].rolling(period2).mean()
+        data2[f"SMA2 {period2}"] = data[f"SMA2 {period2}"].reindex(data2.index)
+
+    st.subheader("Stock Chart")
+    st.line_chart(data2)
+
+    
+    st.subheader("Company Statistics")
+    st.table(data2.describe())
+
+    if st.sidebar.checkbox("View Historical Company Shares"):
+        st.subheader(f"{asset} historical data")
+        st.write(data2)
+
+    
+    
+
+
+main()
