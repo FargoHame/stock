@@ -99,7 +99,7 @@ def load_data():
 
 @st.cache(allow_output_mutation=True)
 def load_quotes(asset):
-    return yfinance.download(asset)
+    return yf.download(asset)
 
 
 def main():
