@@ -174,9 +174,9 @@ def pre_dict():
     fig2 = m.plot_components(forecast)
     st.write(fig2)
 
-if st.button('Predict'): 
-   if st.button('Stop'):
-      st.title("Stopped")
+if st.button('Stock Prediction'): 
+   if st.button('Stop Prediction'):
+      st.title("Prediction Stopped")
    else:
        pre_dict()
 
