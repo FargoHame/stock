@@ -175,7 +175,9 @@ def pre_dict():
     st.write(fig2)
 
 if st.button('Predict'): 
-   if !st.button('Stop'):
+   if st.button('Stop'):
+      st.title("Stopped")
+   else:
        pre_dict()
 
 
