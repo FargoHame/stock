@@ -180,6 +180,6 @@ if st.button('Stock Prediction'):
    else:
        pre_dict()
 
-
+st.sidebar.subheader("Read an article about this app: https://proskillocity.blogspot.com/2021/05/financial-stock-price-web-app.html")
 
 
