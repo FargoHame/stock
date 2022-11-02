@@ -19,7 +19,7 @@ st.markdown('''
 # Fintech Stock Price App 
 This app shows the closing financial stock price values for S and P 500 companies along with the timeline.  
 - These are 500 of the largest companies listed on stock exchanges in the US.
-- App built by Pranav Sawant and Anshuman Shukla of Team Skillocity.
+- App built by Anshuman Shukla and Pranav Sawant of Team Skillocity.
 - Dataset resource: Yahoo Finance
 - Added feature: Time series forecasting with fbprophet that can predict the stock price values over 15 years.
 - Note: User inputs for the company to be analysed are taken from the sidebar. It is located at the top left of the page (arrow symbol). Inputs for other features of data analysis can also be provided from the sidebar itself. 
