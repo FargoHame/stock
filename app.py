@@ -2,13 +2,15 @@ import streamlit as st
 from datetime import date
 
 import yfinance as yf
-from fbprophet import Prophet
-from fbprophet.plot import plot_plotly
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+import numpy as np
 from plotly import graph_objs as go
 
 from PIL import Image
 import pandas as pd
 
+import hashlib
+import types
 
 
 image = Image.open('stock.jpeg')
@@ -26,17 +28,21 @@ This app shows the closing financial stock price values for S and P 500 companie
 ''')
 st.write('---')
 
-@st.cache
+
+
+
 def load_data():
     components = pd.read_html(
-        "https://en.wikipedia.org/wiki/List_of_S" "%26P_500_companies"
+        "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
     )[0]
-    return components.drop("SEC filings", axis=1).set_index("Symbol")
+    components = components.drop("SEC filings", axis=1) if "SEC filings" in components.columns else components
+    return components.set_index("Symbol")
 
 
-@st.cache(allow_output_mutation=True)
 def load_quotes(asset):
-    return yf.download(asset)
+    # Use yfinance to fetch historical stock price data
+    data = yf.download(asset, start="2010-01-01", end=date.today())
+    return data
 
 
 def main():
@@ -115,71 +121,64 @@ def main():
 main()
 
 #part2
+# ... (previous code)
+
+
 def pre_dict():
     st.header('Stock prediction')
 
     START = "2010-01-01"
     TODAY = date.today().strftime("%Y-%m-%d")
 
-
-    stocks = ('AAPL', 'GOOG', 'MSFT', 'GME')
+    stocks = ('AAPL', 'GOOGL', 'MSFT', 'GME')  # Updated the stock symbols
     selected_stock = st.selectbox('Select company for prediction', stocks)
 
     n_years = st.slider('Years of prediction:', 1, 15)
     period = n_years * 365
 
-
-    @st.cache
-    def load_data(ticker):
-        data = yf.download(ticker, START, TODAY)
-        data.reset_index(inplace=True)
-        return data
-
-	
-    #data_load_state = st.text('Loading data...')
-    data = load_data(selected_stock)
-    #data_load_state.text('Loading data... done!')
-
+    # Load historical stock price data using yfinance
+    data = yf.download(selected_stock, start="2010-01-01", end=date.today())
+    
     st.subheader('Raw data')
     st.write(data.tail())
 
-    # Plot raw data
     def runpls():
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=data['Date'], y=data['Open'], name = "stock_open"))
-        fig.add_trace(go.Scatter(x=data['Date'], y=data['Close'], name = "stock_close"))
+        fig.add_trace(go.Scatter(x=data.index, y=data['Close'], name="stock_close"))
         fig.layout.update(title_text='Time Series data with Rangeslider', xaxis_rangeslider_visible=True)
         st.plotly_chart(fig)
-	
+
     runpls()
 
-    # Predict forecast with Prophet.
-    df_train = data[['Date','Close']]
-    df_train = df_train.rename(columns={"Date": "ds", "Close": "y"})
+    # Prepare data for SARIMAX model
+    df_train = data[['Close']]
+    df_train = df_train.rename(columns={"Close": "y"})
+    df_train = df_train.asfreq('D')
+    df_train = df_train.interpolate()
 
-    m = Prophet()
-    m.fit(df_train)
-    future = m.make_future_dataframe(periods=period)
-    forecast = m.predict(future)
+    # Fit SARIMAX model
+    model = SARIMAX(df_train, order=(1, 1, 1), seasonal_order=(1, 1, 1, 12))
+    model_fit = model.fit()
 
-    # Show and plot forecast
+    # Make predictions
+    forecast = model_fit.predict(start=len(df_train), end=len(df_train) + period)
+
+    # Plot forecast
     st.subheader('Forecast data')
-    st.write(forecast.tail())
-    
+    st.write(forecast)
+
     st.write(f'Forecast plot for {n_years} years')
-    fig1 = plot_plotly(m, forecast)
+    fig1 = go.Figure()
+    fig1.add_trace(go.Scatter(x=df_train.index, y=df_train['y'], name="actual"))
+    fig1.add_trace(go.Scatter(x=df_train.index[-30:], y=df_train['y'][-30:], name="last_30_days"))
+    fig1.add_trace(go.Scatter(x = (df_train.index[-30:] + pd.to_timedelta(1, unit='D')).astype(np.int64) * period // (365 * 24 * 60 * 60 * 10**9)
+,
+                              y=forecast, name="forecast"))
+    fig1.layout.update(title_text='Time Series data with Rangeslider', xaxis_rangeslider_visible=True)
     st.plotly_chart(fig1)
 
     st.write("Forecast components")
-    fig2 = m.plot_components(forecast)
-    st.write(fig2)
+    st.write("Not available for SARIMAX model")
 
-if st.button('Stock Prediction'): 
-   if st.button('Stop Prediction'):
-      st.title("Prediction Stopped")
-   else:
-       pre_dict()
-
+pre_dict()
 st.sidebar.subheader("Read an article about this app: https://proskillocity.blogspot.com/2021/05/financial-stock-price-web-app.html")
-
-
