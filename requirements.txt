@@ -1,7 +1,6 @@
-yfinance
-plotly
 streamlit
-statsmodels
-Pillow
+yfinance
 pandas
-lxml
+pmdarima
+plotly
+Pillow
