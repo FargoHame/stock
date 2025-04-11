@@ -15,7 +15,6 @@ st.image(image, use_column_width=True)
 st.markdown('''
 # Fintech Stock Price App 
 This app shows the closing financial stock price values for various companies along with the timeline.  
-- App built by Anshuman Shukla and Pranav Sawant of Team Skillocity.
 - Dataset resource: Yahoo Finance
 - Added feature: Time series forecasting with ARIMA that can predict the stock price values over 15 years.
 - Note: User inputs for the company to be analyzed are taken from the sidebar. It is located at the top left of the page (arrow symbol). Inputs for other features of data analysis can also be provided from the sidebar itself. 
